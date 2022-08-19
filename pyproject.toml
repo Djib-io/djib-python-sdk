@@ -1,11 +1,30 @@
 [tool.poetry]
 name = "djib_python_client"
 version = "0.1.0"
-description = ""
+description = "Djib Python API"
 authors = ["Djuno Devs <devs@djuno.io>"]
+license = "GPL-3.0-only"
+readme = "README.md"
+homepage = "https://djib.io"
+documentation = "https://docs.djib.io"
+keywords = ["blockchain", "command-line-tools", "p2p-network", "solana", "djib"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3.10",
+]
+packages = [
+    { include = "djib_python_client" },
+]
 
 [tool.poetry.dependencies]
 python = "^3.10"
+base58 = "^2.1.1"
+jsonrpcserver = "^5.0.8"
+solana = "^0.25.1"
+python-magic = "^0.4.27"
+PyNaCl = "^1.5.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
