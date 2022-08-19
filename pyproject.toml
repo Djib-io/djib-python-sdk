@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "djib_python_client"
+name = "djib"
 version = "0.1.0"
 description = "Djib Python API"
 authors = ["Djuno Devs <devs@djuno.io>"]
@@ -15,7 +15,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
 ]
 packages = [
-    { include = "djib_python_client" },
+    { include = "djib" },
 ]
 
 [tool.poetry.dependencies]
