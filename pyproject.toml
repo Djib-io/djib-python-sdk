@@ -2,7 +2,7 @@
 name = "djib"
 version = "0.1.0"
 description = "Djib Python API"
-authors = ["Djuno Devs <devs@djuno.io>"]
+authors = ["Djib tech team <tech@djib.io>"]
 license = "GPL-3.0-only"
 readme = "README.md"
 homepage = "https://djib.io"
