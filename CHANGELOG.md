@@ -11,3 +11,4 @@ Additional labels for pre-release and build metadata are available as extensions
 ## [0.1.0] - 2022-08-19
 ### Added
 - Initial project structure
+- Add first release
