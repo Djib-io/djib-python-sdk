@@ -11,7 +11,7 @@ from djib.constants import *
 from djib.dtypes import *
 
 
-class KMSClient:
+class KmsClient:
     _wallet_private_key: str
     _wallet_public_key: str
     _kms_api: str
@@ -20,17 +20,18 @@ class KMSClient:
     _pk_bob: Any
     _engine: Box
 
-    def __init__(self, wallet_public_key: str, wallet_private_key: str, is_devnet: bool = False):
+    def __init__(self, wallet_private_key: str, is_devnet: bool = False):
         """ constructor
             :param wallet_public_key: str
             :param wallet_private_key: str
             :param is_devnet: bool
         """
         self._wallet_private_key = wallet_private_key
-        self._wallet_public_key = wallet_public_key
+        tmp = base58.b58decode(self._wallet_private_key)[:32]
+        self._wallet_public_key = str(Keypair.from_seed(tmp).public_key)
         self._kms_api = KMS_MAIN_ENDPOINT if not is_devnet else KMS_DEV_ENDPOINT
-        self._sk_alice = PrivateKey.from_seed(base58.b58decode(self._wallet_private_key)[:32])
-        self._pk_alice = self._sk_alice.encode(Base64Encoder).decode('utf-8')
+        self._sk_alice = PrivateKey.from_seed(tmp)
+        self._pk_alice = self._sk_alice.public_key.encode(Base64Encoder).decode('utf-8')
         handshake_result = self._handshake()
         self._pk_bob = PublicKey(handshake_result.data['pkbob'], Base64Encoder)
         signed_signature = self._sign_message(handshake_result.data['message_to_sign'])
@@ -99,3 +100,7 @@ class KMSClient:
             :return:
         """
         return self._engine.decrypt(data.encode('utf-8'), None, HexEncoder).decode('utf-8')
+
+    @property
+    def wallet_public_key(self):
+        return self._wallet_public_key
