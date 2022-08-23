@@ -1,7 +1,10 @@
+import base64
 import json
 import random
+from os import path, stat
 
 import requests
+from magic import Magic
 
 from djib.dtypes import *
 from djib.kms import KmsClient, request, parse, Ok, PEERS_ENDPOINT
@@ -464,14 +467,15 @@ class DjibRpc:
         """
         return self._call_rpc([path_, owner_email], "rmSharedWithMe")
 
-    def prepare_download_shared(self, path_: str, link: str, owner: str) -> RPCResponse:
+    def prepare_download_shared(self, path_: str, link: str, owner: str, password: str = None) -> RPCResponse:
         """ prepare file for downloading
+            :param password: str
             :param path_: str
             :param link: str
             :param owner: str
             :return: RPCResponse
         """
-        res = self._call_rpc([path_, link, owner], "prepareDownloadShared")
+        res = self._call_rpc([path_, link, owner, password], "prepareDownloadShared")
         if not res.error:
             res.data = json.loads(res.data)
         return res
@@ -550,3 +554,71 @@ class DjibRpc:
         if not res.error:
             res.data = json.loads(res.data)
         return res
+
+    def upload_file(self, path_on_local: str, path_on_drive: str) -> RPCResponse:
+        """ full cycle upload file
+            :param path_on_local: str
+            :param path_on_drive: str
+            :return: RPCResponse
+        """
+        if not path.exists(path_on_local):
+            raise Exception(f"{path_on_local} doesn't exist!")
+        if not path.isfile(path_on_local):
+            raise Exception(f"{path_on_local} isn't a file!")
+        metadata = UploadFileMetadata()
+        metadata.file_name = path_on_local.split(path.sep)[-1]
+        metadata.size_byte = stat(path_on_local)
+        metadata.content_type = Magic(mime=True).from_file(path_on_local)
+        response = self.prepare_upload(path_on_drive, metadata)
+        if response.error:
+            return response
+        tracking_code = response.data['tracking_code']
+        total = response.data['total']
+        index = 0
+        chunks = response.data['chunk']
+        file = open(path_on_local, 'rb')
+        while index != total:
+            file.seek(index * chunks)
+            binary = base64.b64encode(file.read(chunks)).decode('utf-8')
+            response = self.upload_private(tracking_code, index + 1, total, binary)
+            if response.error:
+                return response
+            index += 1
+        file.close()
+
+    def download_file(self, path_on_local: str, path_on_drive: str, is_shared: bool = False, link: str = None,
+                      owner: str = None, password: str = None) -> RPCResponse:
+        """ full cycle download file
+            :param password: str
+            :param owner: str
+            :param link: str
+            :param is_shared: bool
+            :param path_on_local: str
+            :param path_on_drive: str
+            :return: RPCResponse
+        """
+        if not path.exists(path_on_local):
+            raise Exception(f"{path_on_local} doesn't exist!")
+        if path.isfile(path_on_local):
+            raise Exception(f"{path_on_local} is a file!")
+        if not is_shared:
+            response = self.prepare_download(path_on_drive)
+        else:
+            response = self.prepare_download_shared(path_on_drive, link, owner, password)
+        if response.error:
+            return response
+        file_name = response.data['file_name']
+        tracking_code = response.data['tracking_code']
+        total = response.data['total']
+        index = 0
+        chunks = response.data['chunk']
+        file = open(f"{path_on_local}{path.sep}{file_name}", 'wb')
+        while index != total:
+            file.seek(index * chunks)
+            response = self.download_private(tracking_code, index + 1, total)
+            if response.error:
+                return response
+            binary = base64.b64decode(response.data)
+            file.write(binary)
+            index += 1
+        file.close()
