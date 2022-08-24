@@ -18,10 +18,58 @@ with the Djib network.
 pip install djib
 ```
 
-### General Usage
+### General RPC Usage
 
 ```py
-import djib
+from djib.rpc import DjibRpc
+
+WALLET_PRIVATE_KEY = '<Base58 encoded string>'
+
+try:
+    rpc = DjibRpc(WALLET_PRIVATE_KEY, is_devnet=True)
+
+    # status of drive
+    response = rpc.status()
+
+    if response.error:
+        print(f"Error: {response.error['message']}, Code: {response.error['code']}, Data: {response.error['data']}")
+    else:
+        print(response.data)
+except Exception as e:
+    print(f"Error: {str(e)}")
+```
+
+### KMS Usage
+
+```py
+from djib.rpc import KmsClient
+
+WALLET_PRIVATE_KEY = '<Base58 encoded string>'
+
+try:
+    kms = KmsClient(WALLET_PRIVATE_KEY, is_devnet=True)
+    a = 'Hello, World!'
+    a_enc = kms.encrypt(a)
+    a_dec = kms.decrypt(a_enc)
+    assert a_dec == a
+except Exception as e:
+    print(f"Error: {str(e)}")
 ```
 
 
+## Development
+
+### Setup
+
+1. Install [poetry](https://python-poetry.org/docs/#installation)
+2. Install dev dependencies:
+
+```sh
+poetry install
+```
+
+3. Activate the poetry shell.
+
+```sh
+poetry shell
+```
