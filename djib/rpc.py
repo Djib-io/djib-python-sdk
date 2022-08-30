@@ -14,13 +14,16 @@ class DjibRpc:
     _kms: KmsClient = None
     _rpc_url: str = None
 
-    def __init__(self, wallet_private_key: str, is_devnet: bool = False):
+    def __init__(self, wallet_private_key: str, is_devnet: bool = False, rpc_url: str = None):
         """ constructor
             :param wallet_private_key: str
             :param is_devnet: bool
         """
         self._kms = KmsClient(wallet_private_key, is_devnet=is_devnet)
-        self._set_peer(is_devnet)
+        if rpc_url is None:
+            self._set_peer(is_devnet)
+        else:
+            self._rpc_url = rpc_url
 
     def _call_rpc(self, params: list, method: str) -> RPCResponse:
         """ calling KMS API
